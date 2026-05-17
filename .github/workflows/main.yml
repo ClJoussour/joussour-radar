@@ -1,0 +1,37 @@
+name: Joussour Radar Auto-Run
+
+on:
+  schedule:
+    # يعمل كل 60 دقيقة
+    - cron: '0 * * * *'
+  workflow_dispatch: # زر التشغيل اليدوي
+
+jobs:
+  run-radar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Requirements
+        run: pip install -r requirements.txt
+
+      - name: Run Radar Script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+        run: python radar.py
+
+      - name: Commit Memory Update
+        run: |
+          git config --global user.name 'Joussour Bot'
+          git config --global user.email 'bot@joussour.com'
+          git add last_posts_memory.json
+          git commit -m "Update memory" || echo "No changes to commit"
+          git push
